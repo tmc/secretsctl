@@ -20,9 +20,9 @@ var CreateSecretFromFile string
 
 var CreateSecretInputSecretReplicationReplication string
 
-var CreateSecretInputSecretReplicationReplicationAutomatic secretmanagerpb.Replication_Automatic
+var CreateSecretInputSecretReplicationReplicationAutomatic secretmanagerpb.Replication_Automatic_
 
-var CreateSecretInputSecretReplicationReplicationUserManaged secretmanagerpb.Replication_UserManaged
+var CreateSecretInputSecretReplicationReplicationUserManaged secretmanagerpb.Replication_UserManaged_
 
 var CreateSecretInputSecretReplicationReplicationUserManagedReplicas []string
 
@@ -35,9 +35,9 @@ func init() {
 
 	CreateSecretInput.Secret.Replication = new(secretmanagerpb.Replication)
 
-	CreateSecretInputSecretReplicationReplicationAutomatic.Automatic = new(secretmanagerpb.Replication_Automatic)
+	CreateSecretInputSecretReplicationReplicationAutomatic = secretmanagerpb.Replication_Automatic_{}
 
-	CreateSecretInputSecretReplicationReplicationUserManaged.UserManaged = new(secretmanagerpb.Replication_UserManaged)
+	CreateSecretInputSecretReplicationReplicationUserManaged = secretmanagerpb.Replication_UserManaged_{}
 
 	CreateSecretCmd.Flags().StringVar(&CreateSecretInput.Parent, "parent", "", "Required. Required. The resource name of the project to...")
 
@@ -112,16 +112,18 @@ var CreateSecretCmd = &cobra.Command{
 			CreateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas = append(CreateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas, &tmp)
 		}
 
-		// unmarshal JSON strings into slice of structs
-		for _, item := range CreateSecretInputSecretLabels {
-			tmp := secretmanagerpb.Secret_LabelsEntry{}
-			err = jsonpb.UnmarshalString(item, &tmp)
-			if err != nil {
-				return
-			}
+		/*
+			// unmarshal JSON strings into slice of structs
+			for _, item := range CreateSecretInputSecretLabels {
+				tmp := secretmanagerpb.Secret_LabelsEntry{}
+				err = jsonpb.UnmarshalString(item, &tmp)
+				if err != nil {
+					return
+				}
 
-			CreateSecretInput.Secret.Labels = append(CreateSecretInput.Secret.Labels, &tmp)
-		}
+				CreateSecretInput.Secret.Labels = append(CreateSecretInput.Secret.Labels, &tmp)
+			}
+		*/
 
 		if Verbose {
 			printVerboseInput("SecretManager", "CreateSecret", &CreateSecretInput)

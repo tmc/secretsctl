@@ -1,0 +1,16 @@
+name: 'ci'
+on: push
+
+jobs:
+  build-and-test:
+    name: 'Build and Test'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-go@master
+    - run: go mod download -x
+      name: 'Deps'
+    - run: go build ./...
+      name: 'Build'
+    - run: go test -v ./...
+      name: 'Test'
