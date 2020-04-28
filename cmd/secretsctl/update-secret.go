@@ -37,9 +37,9 @@ func init() {
 
 	UpdateSecretInput.Secret.Replication = new(secretmanagerpb.Replication)
 
-	UpdateSecretInputSecretReplicationReplicationAutomatic = new(secretmanagerpb.Replication_Automatic_)
+	UpdateSecretInputSecretReplicationReplicationAutomatic.Automatic = new(secretmanagerpb.Replication_Automatic)
 
-	UpdateSecretInputSecretReplicationReplicationUserManaged = new(secretmanagerpb.Replication_UserManaged)
+	UpdateSecretInputSecretReplicationReplicationUserManaged.UserManaged = new(secretmanagerpb.Replication_UserManaged)
 
 	UpdateSecretInput.UpdateMask = new(field_maskpb.FieldMask)
 
