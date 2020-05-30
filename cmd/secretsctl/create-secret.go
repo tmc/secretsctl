@@ -12,6 +12,8 @@ import (
 	"os"
 
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
+
+	"strings"
 )
 
 var CreateSecretInput secretmanagerpb.CreateSecretRequest
@@ -20,9 +22,9 @@ var CreateSecretFromFile string
 
 var CreateSecretInputSecretReplicationReplication string
 
-var CreateSecretInputSecretReplicationReplicationAutomatic secretmanagerpb.Replication_Automatic
+var CreateSecretInputSecretReplicationReplicationAutomatic secretmanagerpb.Replication_Automatic_
 
-var CreateSecretInputSecretReplicationReplicationUserManaged secretmanagerpb.Replication_UserManaged
+var CreateSecretInputSecretReplicationReplicationUserManaged secretmanagerpb.Replication_UserManaged_
 
 var CreateSecretInputSecretReplicationReplicationUserManagedReplicas []string
 
@@ -45,7 +47,7 @@ func init() {
 
 	CreateSecretCmd.Flags().StringArrayVar(&CreateSecretInputSecretReplicationReplicationUserManagedReplicas, "secret.replication.replication.user_managed.replicas", []string{}, "Required. Required. The list of Replicas for this...")
 
-	CreateSecretCmd.Flags().StringArrayVar(&CreateSecretInputSecretLabels, "secret.labels", []string{}, "The labels assigned to this Secret.   Label keys...")
+	CreateSecretCmd.Flags().StringArrayVar(&CreateSecretInputSecretLabels, "secret.labels", []string{}, "key=value pairs. The labels assigned to this Secret.   Label keys...")
 
 	CreateSecretCmd.Flags().StringVar(&CreateSecretInputSecretReplicationReplication, "secret.replication.replication", "", "Choices: automatic, user_managed")
 
@@ -112,15 +114,14 @@ var CreateSecretCmd = &cobra.Command{
 			CreateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas = append(CreateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas, &tmp)
 		}
 
-		// unmarshal JSON strings into slice of structs
 		for _, item := range CreateSecretInputSecretLabels {
-			tmp := secretmanagerpb.Secret_LabelsEntry{}
-			err = jsonpb.UnmarshalString(item, &tmp)
-			if err != nil {
+			split := strings.Split(item, "=")
+			if len(split) < 2 {
+				err = fmt.Errorf("Invalid map item: %q", item)
 				return
 			}
 
-			CreateSecretInput.Secret.Labels = append(CreateSecretInput.Secret.Labels, &tmp)
+			CreateSecretInput.Secret.Labels[split[0]] = split[1]
 		}
 
 		if Verbose {

@@ -14,6 +14,8 @@ import (
 	"os"
 
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
+
+	"strings"
 )
 
 var UpdateSecretInput secretmanagerpb.UpdateSecretRequest
@@ -22,9 +24,9 @@ var UpdateSecretFromFile string
 
 var UpdateSecretInputSecretReplicationReplication string
 
-var UpdateSecretInputSecretReplicationReplicationAutomatic secretmanagerpb.Replication_Automatic
+var UpdateSecretInputSecretReplicationReplicationAutomatic secretmanagerpb.Replication_Automatic_
 
-var UpdateSecretInputSecretReplicationReplicationUserManaged secretmanagerpb.Replication_UserManaged
+var UpdateSecretInputSecretReplicationReplicationUserManaged secretmanagerpb.Replication_UserManaged_
 
 var UpdateSecretInputSecretReplicationReplicationUserManagedReplicas []string
 
@@ -45,7 +47,7 @@ func init() {
 
 	UpdateSecretCmd.Flags().StringArrayVar(&UpdateSecretInputSecretReplicationReplicationUserManagedReplicas, "secret.replication.replication.user_managed.replicas", []string{}, "Required. Required. The list of Replicas for this...")
 
-	UpdateSecretCmd.Flags().StringArrayVar(&UpdateSecretInputSecretLabels, "secret.labels", []string{}, "The labels assigned to this Secret.   Label keys...")
+	UpdateSecretCmd.Flags().StringArrayVar(&UpdateSecretInputSecretLabels, "secret.labels", []string{}, "key=value pairs. The labels assigned to this Secret.   Label keys...")
 
 	UpdateSecretCmd.Flags().StringSliceVar(&UpdateSecretInput.UpdateMask.Paths, "update_mask.paths", []string{}, "The set of field mask paths.")
 
@@ -110,15 +112,14 @@ var UpdateSecretCmd = &cobra.Command{
 			UpdateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas = append(UpdateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas, &tmp)
 		}
 
-		// unmarshal JSON strings into slice of structs
 		for _, item := range UpdateSecretInputSecretLabels {
-			tmp := secretmanagerpb.Secret_LabelsEntry{}
-			err = jsonpb.UnmarshalString(item, &tmp)
-			if err != nil {
+			split := strings.Split(item, "=")
+			if len(split) < 2 {
+				err = fmt.Errorf("Invalid map item: %q", item)
 				return
 			}
 
-			UpdateSecretInput.Secret.Labels = append(UpdateSecretInput.Secret.Labels, &tmp)
+			UpdateSecretInput.Secret.Labels[split[0]] = split[1]
 		}
 
 		if Verbose {
