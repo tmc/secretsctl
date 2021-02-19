@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 	gax "github.com/googleapis/gax-go/v2"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/api/option/internaloption"
 	gtransport "google.golang.org/api/transport/grpc"
 	secretmanagerpb "google.golang.org/genproto/googleapis/cloud/secretmanager/v1"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
@@ -56,9 +57,11 @@ type SecretManagerCallOptions struct {
 
 func defaultSecretManagerClientOptions() []option.ClientOption {
 	return []option.ClientOption{
-		option.WithEndpoint("secretmanager.googleapis.com:443"),
+		internaloption.WithDefaultEndpoint("secretmanager.googleapis.com:443"),
+		internaloption.WithDefaultMTLSEndpoint("secretmanager.mtls.googleapis.com:443"),
+		internaloption.WithDefaultAudience("https://secretmanager.googleapis.com/"),
+		internaloption.WithDefaultScopes(DefaultAuthScopes()...),
 		option.WithGRPCDialOption(grpc.WithDisableServiceConfig()),
-		option.WithScopes(DefaultAuthScopes()...),
 		option.WithGRPCDialOption(grpc.WithDefaultCallOptions(
 		grpc.MaxCallRecvMsgSize(math.MaxInt32))),
 	}
@@ -106,6 +109,9 @@ type SecretManagerClient struct {
 	// Connection pool of gRPC connections to the service.
 	connPool gtransport.ConnPool
 
+	// flag to opt out of default deadlines via GOOGLE_API_GO_EXPERIMENTAL_DISABLE_DEFAULT_DEADLINE
+	disableDeadlines bool
+
 	// The gRPC API client.
 	secretManagerClient secretmanagerpb.SecretManagerServiceClient
 
@@ -137,12 +143,18 @@ func NewSecretManagerClient(ctx context.Context, opts ...option.ClientOption) (*
 		clientOpts = append(clientOpts, hookOpts...)
 	}
 
+	disableDeadlines, err := checkDisableDeadlines()
+	if err != nil {
+		return nil, err
+	}
+
 	connPool, err := gtransport.DialPool(ctx, append(clientOpts, opts...)...)
 	if err != nil {
 		return nil, err
 	}
 	c := &SecretManagerClient{
 		connPool:    connPool,
+		disableDeadlines: disableDeadlines,
 		CallOptions: defaultSecretManagerCallOptions(),
 
 		secretManagerClient: secretmanagerpb.NewSecretManagerServiceClient(connPool),
@@ -199,7 +211,7 @@ func (c *SecretManagerClient) ListSecrets(ctx context.Context, req *secretmanage
 		}
 
 		it.Response = resp
-		return resp.Secrets, resp.NextPageToken, nil
+		return resp.GetSecrets(), resp.GetNextPageToken(), nil
 	}
 	fetch := func(pageSize int, pageToken string) (string, error) {
 		items, nextPageToken, err := it.InternalFetch(pageSize, pageToken)
@@ -210,8 +222,8 @@ func (c *SecretManagerClient) ListSecrets(ctx context.Context, req *secretmanage
 		return nextPageToken, nil
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
-	it.pageInfo.MaxSize = int(req.PageSize)
-	it.pageInfo.Token = req.PageToken
+	it.pageInfo.MaxSize = int(req.GetPageSize())
+	it.pageInfo.Token = req.GetPageToken()
 	return it
 }
 
@@ -323,7 +335,7 @@ func (c *SecretManagerClient) ListSecretVersions(ctx context.Context, req *secre
 		}
 
 		it.Response = resp
-		return resp.Versions, resp.NextPageToken, nil
+		return resp.GetVersions(), resp.GetNextPageToken(), nil
 	}
 	fetch := func(pageSize int, pageToken string) (string, error) {
 		items, nextPageToken, err := it.InternalFetch(pageSize, pageToken)
@@ -334,8 +346,8 @@ func (c *SecretManagerClient) ListSecretVersions(ctx context.Context, req *secre
 		return nextPageToken, nil
 	}
 	it.pageInfo, it.nextFunc = iterator.NewPageInfo(fetch, it.bufLen, it.takeBuf)
-	it.pageInfo.MaxSize = int(req.PageSize)
-	it.pageInfo.Token = req.PageToken
+	it.pageInfo.MaxSize = int(req.GetPageSize())
+	it.pageInfo.Token = req.GetPageToken()
 	return it
 }
 
