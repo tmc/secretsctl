@@ -28,9 +28,9 @@ var UpdateSecretFromFile string
 
 var UpdateSecretInputSecretExpiration string
 
-var UpdateSecretInputSecretExpirationExpireTime timestamppb.Secret_ExpireTime
+var UpdateSecretInputSecretExpirationExpireTime secretmanagerpb.Secret_ExpireTime
 
-var UpdateSecretInputSecretExpirationTtl durationpb.Secret_Ttl
+var UpdateSecretInputSecretExpirationTtl secretmanagerpb.Secret_Ttl
 
 var UpdateSecretInputSecretReplicationReplication string
 
@@ -154,6 +154,9 @@ var UpdateSecretCmd = &cobra.Command{
 			UpdateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas = append(UpdateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas, &tmp)
 		}
 
+		if len(UpdateSecretInputSecretLabels) > 0 {
+			UpdateSecretInput.Secret.Labels = make(map[string]string)
+		}
 		for _, item := range UpdateSecretInputSecretLabels {
 			split := strings.Split(item, "=")
 			if len(split) < 2 {

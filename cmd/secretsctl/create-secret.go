@@ -26,9 +26,9 @@ var CreateSecretFromFile string
 
 var CreateSecretInputSecretExpiration string
 
-var CreateSecretInputSecretExpirationExpireTime timestamppb.Secret_ExpireTime
+var CreateSecretInputSecretExpirationExpireTime secretmanagerpb.Secret_ExpireTime
 
-var CreateSecretInputSecretExpirationTtl durationpb.Secret_Ttl
+var CreateSecretInputSecretExpirationTtl secretmanagerpb.Secret_Ttl
 
 var CreateSecretInputSecretReplicationReplication string
 
@@ -156,6 +156,9 @@ var CreateSecretCmd = &cobra.Command{
 			CreateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas = append(CreateSecretInputSecretReplicationReplicationUserManaged.UserManaged.Replicas, &tmp)
 		}
 
+		if len(CreateSecretInputSecretLabels) > 0 {
+			CreateSecretInput.Secret.Labels = make(map[string]string)
+		}
 		for _, item := range CreateSecretInputSecretLabels {
 			split := strings.Split(item, "=")
 			if len(split) < 2 {
